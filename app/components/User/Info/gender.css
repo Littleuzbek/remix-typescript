@@ -1,0 +1,81 @@
+.gender-selection {
+    width: 20rem;
+    height: 3.2rem;
+    display: flex;
+    justify-content: space-evenly;
+    align-self: center;
+    gap: 1.5rem; /* Space between options */
+    border: 2px solid black;
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1.5rem 5% 1rem;
+  }
+  
+  .gender-option {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  
+  /* Hide the default radio button */
+  .gender-radio {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .gender-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 18px;
+    color: #2d3748;
+    user-select: none;
+  }
+  
+  /* Custom radio button */
+  .radio-custom {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    border: 2px solid #cbd5e0;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  
+  /* The dot inside the radio button */
+  .radio-custom::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #3182ce;
+    transition: transform 0.2s ease;
+  }
+  
+  /* When the radio is checked */
+  .gender-radio:checked + .gender-label .radio-custom {
+    border-color: #3182ce;
+  }
+  
+  .gender-radio:checked + .gender-label .radio-custom::after {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  
+  /* Focus styles for accessibility */
+  .gender-radio:focus + .gender-label .radio-custom {
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.25);
+  }
+  
+  /* Hover styles */
+  .gender-label:hover .radio-custom {
+    border-color: #a0aec0;
+  }
+  

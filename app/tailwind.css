@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root {
+  --bg-font-all: 18px;
+
+  --first-color: rosybrown;
+  --first-color-light: rgb(194, 158, 158);
+  --second-color: #f0f2f5;
+  --success-color: rgb(95, 255, 47);
+  --credit-background: rgb(207, 207, 207);
+  --credit-number-background: yellow;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Barlow Condensed", sans-serif;
+  font-display: swap;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body{
+  width: 100%;
+  height: 100vh;
+}
+
+.header-catalog-btn-container-animation {
+  animation: catalogBtn 4s ease infinite;
+}
+
+.header-catalog-open:nth-child(1) {
+  position: absolute;
+  rotate: 45deg;
+}
+
+.header-catalog-open:nth-child(3) {
+  position: absolute;
+  rotate: -45deg;
+}
+
+.header-catalog-container > div{
+  animation: catalogOpen 0.5s ease;
+}
+
+.skeleton_card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150px;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent ,
+    white ,
+    transparent
+  );
+  animation: shimmer 1.5s infinite alternate;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.swiper-pagination-bullet-active {
+  background: white !important;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  user-select: none;
+  color: white !important;
+}
+
+.support-btn-loader,
+.auth-loader{
+  animation: supportLoader 1.5s linear infinite;
+}
+
+/* animations */
+
+@keyframes catalogBtn {
+  from {
+    top: -200%;
+  }
+  to {
+    top: 100%;
+  }
+}
+
+@keyframes catalogOpen {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes appear {
+  from {
+    top: -8rem;
+  }
+  to {
+    top: 50px;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes supportLoader {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: 360deg;
+  }
+}
