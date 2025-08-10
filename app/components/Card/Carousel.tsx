@@ -44,7 +44,6 @@ export default function Carousel({ productImg, viewMode, inProduct }: Props) {
                   dispatch(cartAction.setViewer(true));
                 }
               }}
-              fetchPriority="high"
               onKeyDown={() => {}}
               tabIndex={-1}
               role="button"

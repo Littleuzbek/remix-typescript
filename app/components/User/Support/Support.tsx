@@ -1,6 +1,15 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import { collection, onSnapshot, Timestamp } from "firebase/firestore";
-import { useFetcher } from "@remix-run/react";
+import {
+  collection,
+  getDocs,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  startAfter,
+  Timestamp,
+} from "firebase/firestore";
+import { useFetcher, useNavigate } from "@remix-run/react";
 // import { useDispatch } from "react-redux";
 import { onAuthStateChanged } from "firebase/auth";
 import { User } from "lucide-react";
@@ -18,28 +27,41 @@ interface Message {
 export default function Support() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loader, setLoader] = useState<boolean>(false);
+  const [messageLoader, setMessageLoader] = useState<boolean>(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState<boolean>(false);
   // const [viewer, setViewer] = useState<boolean | string>(false);
   const [file, setFile] = useState<null | File>(null);
+  // const [messageLimit, setMessageLimit] = useState<number>(50);
   const inpRef = useRef<HTMLInputElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   const fetcher = useFetcher();
+  const navigate = useNavigate();
   // const dispatch = useDispatch();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const getMessages = onSnapshot(
-          collection(db, "exko", "support", "users", user.uid, "chat"),
-          (query) => {
+          query(
+            collection(db, "exko", "support", "users", user.uid, "chat"),
+            orderBy("date", "desc"),
+            limit(50)
+          ),
+          (querySnapshot) => {
             const messagesArr = [] as Message[];
 
-            query?.forEach((item) => messagesArr.push(item.data() as Message));
+            querySnapshot?.forEach((doc) =>
+              messagesArr.push(doc.data() as Message)
+            );
 
             if (messagesArr) {
-              setMessages(
-                messagesArr?.sort(
-                  (a, b) => b.date.toMillis() - a.date.toMillis()
-                )
-              );
+              setMessages((prevMessages) => {
+                if (prevMessages?.length !== 0) {
+                  return [messagesArr[0], ...prevMessages];
+                } else {
+                  return messagesArr;
+                }
+              });
             }
           }
         );
@@ -60,7 +82,7 @@ export default function Support() {
       const formData = new FormData(target);
       const token = await auth?.currentUser?.getIdToken();
 
-      if(token){
+      if (token) {
         formData.append("idToken", token);
       }
       // formData.append("updater", false);
@@ -109,13 +131,70 @@ export default function Support() {
     }
   }, [fetcher?.data]);
 
+  const loadMoreMessages = async () => {
+    if (hasMoreMessages) return;
+    if (!auth?.currentUser) return navigate("/authentication");
+    
+    const q = query(
+      collection(
+        db,
+        "exko",
+        "support",
+        "users",
+        auth?.currentUser?.uid,
+        "chat"
+      ),
+      orderBy("date", "desc"),
+      startAfter(messages.at(-1)?.date),
+      limit(50)
+    );
+
+    setMessageLoader(true);
+
+    const moreMessages = [] as Message[];
+    await getDocs(q)?.then((querySnap) =>
+      querySnap.forEach((m) => moreMessages.push(m.data() as Message))
+    );
+
+    if (moreMessages && moreMessages.length !== 0) {
+      setMessages((previousMessages) => [
+        ...previousMessages,
+        ...moreMessages,
+      ]);
+    } else {
+      setHasMoreMessages(true);
+    }
+
+    setMessageLoader(false);
+  };
+
+  const handleScroll = () => {
+    const container = scrollRef?.current;
+
+    if (!container || messages.length === 0 || messageLoader) return;
+    const currentScrollPosition =
+      (container?.scrollTop - container?.clientHeight) * -1;
+
+    if (currentScrollPosition > container?.scrollHeight - 10) {
+      loadMoreMessages();
+    }
+  };
+
   return (
     <div className="h-fit p-[1rem] border-3 border-[var(--first-color)] rounded-[20px]">
       <div className="py-[10px] px-[1rem] border-b-3 border-[var(--first-color)] rounded-t-[10px] flex items-center justify-center gap-[1rem] bg-[var(--second-color)] ">
         <User className="w-[2.5rem] h-[2.5rem] rounded-full p-[5px] border-3 border-[var(--first-color)] text-[var(--first-color)]" />
         <h2 className="text-[var(--first-color)]">EXKO</h2>
       </div>
-      <div className="h-[20rem] p-[10px] bg-[var(--second-color)] flex flex-col-reverse gap-[.5rem] overflow-auto [&::-webkit-scrollbar]:hidden">
+      <div
+        className="h-[30rem] p-[10px] bg-[var(--second-color)] flex flex-col-reverse gap-[.5rem] overflow-auto [&::-webkit-scrollbar]:hidden"
+        onScroll={handleScroll}
+        ref={scrollRef}
+      >
+        {messages.length === 0 && (
+          <p className="text-center text-[14px] opacity-70">Loading...</p>
+        )}
+
         {messages?.map((m, i) => (
           <Fragment key={i}>
             {m.userMessage || m.userImage ? (
@@ -149,6 +228,11 @@ export default function Support() {
             )}
           </Fragment>
         ))}
+        {messageLoader && messages.length > 0 && (
+          <p className="text-center text-[14px] opacity-70">
+            Loading more...
+          </p>
+        )}
       </div>
       <ChatInput
         fileVal={file}
